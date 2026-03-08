@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Door Display - Weather & Bus Departures</title>
+  <title>Door Display - Munich Weather Hourly</title>
   <style>
     body {
       margin: 0;
@@ -19,69 +19,97 @@
       flex-direction: column;
       height: 100%;
     }
-    #weather {
-      flex: 1;
+    #current-weather {
       background: #1a1a2e;
-      padding: 10px;
-      font-size: 2em;
+      padding: 15px;
+      font-size: 1.8em;
       text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
-    #bus {
+    #hourly {
       flex: 1;
       background: #16213e;
-      padding: 0;
-      overflow: hidden;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 1.4em;
     }
-    #bus iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    .hour {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #444;
     }
+    .hour:last-child { border-bottom: none; }
     .loading { color: #aaa; }
   </style>
 </head>
 <body>
   <div id="container">
-    <!-- Weather: Open-Meteo fetch (working for you) -->
-    <div id="weather" class="loading">Loading Munich weather...</div>
+    <div id="current-weather" class="loading">Loading Munich weather...</div>
 
-    <!-- Bus Departures: Iframe of MVV EFA departures for Kiefernstraße -->
-    <div id="bus">
-      <iframe src="https://efa.mvv-muenchen.de/index.html?name_dm=de:09162:430" 
-              title="MVV Departures Kiefernstraße"></iframe>
+    <div id="hourly" class="loading">
+      <div>Loading hourly forecast...</div>
     </div>
   </div>
 
   <script>
-    // Weather fetch - keep this since it's working
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=48.1351&longitude=11.5820&current=temperature_2m,apparent_temperature,weather_code,relative_humidity_2m&timezone=Europe%2FBerlin')
+    // Open-Meteo API - hourly for today (24 hours)
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=48.1351&longitude=11.5820&hourly=temperature_2m,weather_code&timezone=Europe%2FBerlin&forecast_days=1')
       .then(res => res.json())
       .then(data => {
-        const now = data.current;
-        const temp = Math.round(now.temperature_2m);
-        const feels = Math.round(now.apparent_temperature);
-        const hum = now.relative_humidity_2m;
-        let wmo = now.weather_code;
-        let desc = 'Unknown';
-        if (wmo === 0 || wmo === 1) desc = 'Clear';
-        else if (wmo <= 3) desc = 'Sunny';
-        else if (wmo <= 48) desc = 'Cloudy';
-        else if (wmo <= 67) desc = 'Rain';
-        else if (wmo <= 77) desc = 'Snow';
-        else desc = 'Thunder / Fog';
-        document.getElementById('weather').innerHTML = `Munich<br>${temp}°C (feels ${feels}°C)<br>${desc}, ${hum}% hum.`;
-        document.getElementById('weather').classList.remove('loading');
+        const hourly = data.hourly;
+        const times = hourly.time;                // e.g., ["2026-03-08T00:00", ...]
+        const temps = hourly.temperature_2m;      // °C
+        const codes = hourly.weather_code;        // WMO codes
+
+        // Build current/summary (first hour or approx now)
+        const nowIndex = 0; // Use first as "current" for simplicity (API gives forecast from midnight)
+        const currentTemp = Math.round(temps[nowIndex]);
+        let currentDesc = getWeatherDesc(codes[nowIndex]);
+        document.getElementById('current-weather').innerHTML = 
+          `Munich Today<br>${currentTemp}°C • ${currentDesc.emoji} ${currentDesc.text}`;
+        document.getElementById('current-weather').classList.remove('loading');
+
+        // Hourly list
+        let html = '';
+        for (let i = 0; i < times.length; i++) {
+          const timeStr = times[i].split('T')[1].slice(0, 5); // HH:MM
+          const temp = Math.round(temps[i]);
+          const desc = getWeatherDesc(codes[i]);
+          html += `
+            <div class="hour">
+              <span>${timeStr}</span>
+              <span>${temp}°C</span>
+              <span>${desc.emoji} ${desc.text}</span>
+            </div>
+          `;
+        }
+        document.getElementById('hourly').innerHTML = html;
+        document.getElementById('hourly').classList.remove('loading');
       })
-      .catch(() => {
-        document.getElementById('weather').innerText = 'Weather unavailable';
-        document.getElementById('weather').classList.remove('loading');
+      .catch(err => {
+        console.error(err);
+        document.getElementById('current-weather').innerText = 'Weather unavailable';
+        document.getElementById('hourly').innerText = 'Hourly forecast unavailable';
+        document.getElementById('current-weather').classList.remove('loading');
+        document.getElementById('hourly').classList.remove('loading');
       });
 
-    // Auto-refresh entire page every 120 seconds for live bus updates
-    setInterval(() => location.reload(), 120000);
+    // WMO code → description + emoji symbol
+    function getWeatherDesc(code) {
+      if (code === 0) return { text: 'Clear sky', emoji: '☀️' };
+      if ([1,2,3].includes(code)) return { text: 'Mainly clear / Cloudy', emoji: '🌤️' };
+      if ([45,48].includes(code)) return { text: 'Fog', emoji: '🌫️' };
+      if ([51,53,55,56,57].includes(code)) return { text: 'Drizzle', emoji: '🌧️' };
+      if ([61,63,65,66,67].includes(code)) return { text: 'Rain', emoji: '🌧️' };
+      if ([71,73,75,77].includes(code)) return { text: 'Snow', emoji: '❄️' };
+      if ([80,81,82].includes(code)) return { text: 'Rain showers', emoji: '🌦️' };
+      if ([85,86].includes(code)) return { text: 'Snow showers', emoji: '🌨️' };
+      if ([95,96,99].includes(code)) return { text: 'Thunderstorm', emoji: '⛈️' };
+      return { text: 'Unknown', emoji: '❓' };
+    }
+
+    // Refresh page every 2 hours (7200000 ms) - forecast updates slowly
+    setInterval(() => location.reload(), 7200000);
   </script>
 </body>
 </html>
