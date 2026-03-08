@@ -3,49 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Door Display</title>
+  <title>Door Display - Weather & Bus Times</title>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; color: white; background: #111; overflow: hidden; }
-    #container { height: 100vh; display: flex; flex-direction: column; }
-    #weather { flex: 1; background: #222; padding: 20px; font-size: 2.5em; text-align: center; }
-    #bus { flex: 1; background: #333; padding: 20px; font-size: 2em; text-align: center; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      background: #111;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    #weather {
+      flex: 1;
+      background: #222;
+      padding: 10px;
+      overflow: hidden;
+    }
+    #bus {
+      flex: 1;
+      background: #333;
+      padding: 20px;
+      font-size: 1.8em;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #bus.loading {
+      color: #888;
+    }
+    /* Make weather widget fit nicely */
+    .weatherwidget-io {
+      width: 100% !important;
+      height: 100% !important;
+    }
   </style>
 </head>
 <body>
   <div id="container">
-    <div id="weather">Loading weather for Munich...</div>
-    <div id="bus">Loading next bus times...</div>
+    <!-- Weather: Your WeatherWidget.io embed -->
+    <div id="weather">
+      <a class="weatherwidget-io" href="https://forecast7.com/en/48d1411d58/munich/" 
+         data-label_1="MUNICH" 
+         data-label_2="WEATHER" 
+         data-theme="original">
+         MUNICH WEATHER
+      </a>
+      <script>
+        !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
+      </script>
+    </div>
+
+    <!-- Bus Times Section -->
+    <div id="bus" class="loading">Loading next bus times...</div>
   </div>
 
   <script>
-    // === WEATHER (using free OpenWeatherMap API) ===
-    // 1. Go to https://openweathermap.org, sign up free, get your API key (email confirmation needed, takes ~10 min to activate)
-    // 2. Replace YOUR_API_KEY below with it (looks like 1234567890abcdef1234567890abcdef)
-    const weatherApiKey = 'YOUR_API_KEY';
-    const city = 'Munich,DE'; // Change if not Munich
-
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${weatherApiKey}&units=metric`)
-      .then(response => response.json())
+    // Bus times placeholder (replace fetch URL later)
+    fetch('https://example.com/bus-times')  // <-- CHANGE THIS TO YOUR PROXY OR API
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
       .then(data => {
-        if (data.main) {
-          document.getElementById('weather').innerHTML = `${data.name}: ${Math.round(data.main.temp)}°C<br>${data.weather[0].description}`;
-        } else {
-          document.getElementById('weather').innerText = 'Weather data unavailable';
-        }
+        // Assuming data is an array like ["14:32 U3", "14:45 Bus 58", ...]
+        document.getElementById('bus').innerText = 'Next departures:\n' + data.slice(0, 6).join('\n');
+        document.getElementById('bus').classList.remove('loading');
       })
-      .catch(() => document.getElementById('weather').innerText = 'Weather fetch error');
+      .catch(error => {
+        console.error('Bus fetch error:', error);
+        document.getElementById('bus').innerText = 'Bus times unavailable\n(Check connection or setup)';
+        document.getElementById('bus').classList.remove('loading');
+      });
 
-    // === BUS TIMES ===
-    // For now, placeholder. Replace the fetch URL with your real one (see below for MVV options)
-    fetch('https://example.com/bus-times')  // <-- CHANGE THIS
-      .then(response => response.json())
-      .then(times => {
-        document.getElementById('bus').innerText = 'Next departures:\n' + times.join('\n');
-      })
-      .catch(() => document.getElementById('bus').innerText = 'Bus times unavailable - check setup');
-
-    // Auto-refresh the whole page every 60 seconds for live updates
-    setInterval(() => location.reload(), 60000);
+    // Auto-refresh the page every 90 seconds to update weather widget & bus data
+    setInterval(() => {
+      location.reload();
+    }, 90000);
   </script>
 </body>
 </html>
