@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Door Display - Munich Weather Hourly</title>
+  <title>Door Display - Weather & Bus</title>
   <style>
     body {
       margin: 0;
@@ -19,59 +19,65 @@
       flex-direction: column;
       height: 100%;
     }
-    #current-weather {
+    #weather {
       background: #1a1a2e;
-      padding: 15px;
-      font-size: 1.8em;
-      text-align: center;
-    }
-    #hourly {
-      flex: 1;
-      background: #16213e;
       padding: 10px;
+      font-size: 1.4em; /* Smaller text */
+      text-align: center;
+      flex: 0 0 35%; /* Top ~35% for weather */
       overflow-y: auto;
-      font-size: 1.4em;
+    }
+    #bus {
+      flex: 1; /* Bottom takes most space */
+      background: #16213e;
+      padding: 0;
+      overflow: hidden;
+    }
+    #bus iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
     .hour {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #444;
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
+      font-size: 1.1em; /* Even smaller per row */
     }
     .hour:last-child { border-bottom: none; }
     .loading { color: #aaa; }
+    h2 { margin: 5px 0; font-size: 1.3em; }
   </style>
 </head>
 <body>
   <div id="container">
-    <div id="current-weather" class="loading">Loading Munich weather...</div>
+    <div id="weather" class="loading">
+      <h2>Munich Next 8 Hours</h2>
+      <div>Loading...</div>
+    </div>
 
-    <div id="hourly" class="loading">
-      <div>Loading hourly forecast...</div>
+    <div id="bus">
+      <!-- MVV EFA departures - search "Kiefernstraße" on first load -->
+      <iframe src="https://efa.mvv-muenchen.de/index.html" 
+              title="MVV Departures - Search Kiefernstraße"></iframe>
     </div>
   </div>
 
   <script>
-    // Open-Meteo API - hourly for today (24 hours)
+    // Open-Meteo: Next ~8 hours from now (forecast starts near current time)
     fetch('https://api.open-meteo.com/v1/forecast?latitude=48.1351&longitude=11.5820&hourly=temperature_2m,weather_code&timezone=Europe%2FBerlin&forecast_days=1')
       .then(res => res.json())
       .then(data => {
         const hourly = data.hourly;
-        const times = hourly.time;                // e.g., ["2026-03-08T00:00", ...]
-        const temps = hourly.temperature_2m;      // °C
-        const codes = hourly.weather_code;        // WMO codes
+        const times = hourly.time;
+        const temps = hourly.temperature_2m;
+        const codes = hourly.weather_code;
 
-        // Build current/summary (first hour or approx now)
-        const nowIndex = 0; // Use first as "current" for simplicity (API gives forecast from midnight)
-        const currentTemp = Math.round(temps[nowIndex]);
-        let currentDesc = getWeatherDesc(codes[nowIndex]);
-        document.getElementById('current-weather').innerHTML = 
-          `Munich Today<br>${currentTemp}°C • ${currentDesc.emoji} ${currentDesc.text}`;
-        document.getElementById('current-weather').classList.remove('loading');
-
-        // Hourly list
+        // Find approximate "now" index (first hour >= current time, but approx first 8 for simplicity)
         let html = '';
-        for (let i = 0; i < times.length; i++) {
+        const maxHours = Math.min(8, times.length);
+        for (let i = 0; i < maxHours; i++) {
           const timeStr = times[i].split('T')[1].slice(0, 5); // HH:MM
           const temp = Math.round(temps[i]);
           const desc = getWeatherDesc(codes[i]);
@@ -83,33 +89,29 @@
             </div>
           `;
         }
-        document.getElementById('hourly').innerHTML = html;
-        document.getElementById('hourly').classList.remove('loading');
+        document.getElementById('weather').innerHTML = '<h2>Munich Next 8 Hours</h2>' + html;
+        document.getElementById('weather').classList.remove('loading');
       })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('current-weather').innerText = 'Weather unavailable';
-        document.getElementById('hourly').innerText = 'Hourly forecast unavailable';
-        document.getElementById('current-weather').classList.remove('loading');
-        document.getElementById('hourly').classList.remove('loading');
+      .catch(() => {
+        document.getElementById('weather').innerText = 'Weather unavailable';
+        document.getElementById('weather').classList.remove('loading');
       });
 
-    // WMO code → description + emoji symbol
+    // WMO code to emoji + short text
     function getWeatherDesc(code) {
-      if (code === 0) return { text: 'Clear sky', emoji: '☀️' };
-      if ([1,2,3].includes(code)) return { text: 'Mainly clear / Cloudy', emoji: '🌤️' };
+      if (code === 0) return { text: 'Clear', emoji: '☀️' };
+      if ([1,2,3].includes(code)) return { text: 'Clear/Cloudy', emoji: '🌤️' };
       if ([45,48].includes(code)) return { text: 'Fog', emoji: '🌫️' };
-      if ([51,53,55,56,57].includes(code)) return { text: 'Drizzle', emoji: '🌧️' };
-      if ([61,63,65,66,67].includes(code)) return { text: 'Rain', emoji: '🌧️' };
-      if ([71,73,75,77].includes(code)) return { text: 'Snow', emoji: '❄️' };
-      if ([80,81,82].includes(code)) return { text: 'Rain showers', emoji: '🌦️' };
-      if ([85,86].includes(code)) return { text: 'Snow showers', emoji: '🌨️' };
-      if ([95,96,99].includes(code)) return { text: 'Thunderstorm', emoji: '⛈️' };
-      return { text: 'Unknown', emoji: '❓' };
+      if ([51,53,55].includes(code)) return { text: 'Drizzle', emoji: '🌧️' };
+      if ([61,63,65].includes(code)) return { text: 'Rain', emoji: '🌧️' };
+      if ([71,73,75].includes(code)) return { text: 'Snow', emoji: '❄️' };
+      if ([80,81,82].includes(code)) return { text: 'Showers', emoji: '🌦️' };
+      if ([95,96,99].includes(code)) return { text: 'Thunder', emoji: '⛈️' };
+      return { text: '?', emoji: '❓' };
     }
 
-    // Refresh page every 2 hours (7200000 ms) - forecast updates slowly
-    setInterval(() => location.reload(), 7200000);
+    // Refresh every 2 minutes for live bus updates (weather changes slower)
+    setInterval(() => location.reload(), 120000);
   </script>
 </body>
 </html>
