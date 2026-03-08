@@ -6,21 +6,18 @@
   <title>Door Display</title>
   <link href="https://fonts.googleapis.com/css2?family=Literata:wght@300;400;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* ── PAPERWHITE PALETTE ───────────────────────── */
     :root {
-      --paper:  #f0ece0;
-      --ink:    #1a1814;
-      --ink2:   #3d3830;
-      --ink3:   #6b6459;
-      --ink4:   #a09890;
-      --rule:   #c4bba8;
-      --rule2:  #ddd6c8;
-      --hi:     rgba(26,24,20,0.06);
+      --paper: #f0ece0;
+      --ink:   #1a1814;
+      --ink2:  #3d3830;
+      --ink3:  #6b6459;
+      --ink4:  #a09890;
+      --rule:  #c4bba8;
+      --rule2: #ddd6c8;
+      --hi:    rgba(26,24,20,0.06);
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
-
     body {
       font-family: 'Literata', Georgia, serif;
       background: var(--paper);
@@ -28,13 +25,10 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      /* subtle grain */
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
     }
 
-    /* ─────────────────────────────────────────────── */
-    /* HEADER                                          */
-    /* ─────────────────────────────────────────────── */
+    /* ── HEADER ── */
     #header {
       display: flex;
       justify-content: space-between;
@@ -42,7 +36,6 @@
       padding: 6px 16px;
       border-bottom: 2px solid var(--ink);
       flex-shrink: 0;
-      gap: 10px;
     }
     .h-loc {
       font-family: 'Courier Prime', monospace;
@@ -50,15 +43,12 @@
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--ink3);
-      white-space: nowrap;
     }
     #clock {
       font-size: 2em;
       font-weight: 300;
       letter-spacing: 0.06em;
       font-variant-numeric: tabular-nums;
-      line-height: 1;
-      white-space: nowrap;
     }
     #date-lbl {
       font-family: 'Courier Prime', monospace;
@@ -66,12 +56,9 @@
       letter-spacing: 0.08em;
       color: var(--ink3);
       text-align: right;
-      white-space: nowrap;
     }
 
-    /* ─────────────────────────────────────────────── */
-    /* MAIN — vertical stack                           */
-    /* ─────────────────────────────────────────────── */
+    /* ── MAIN vertical stack ── */
     #main {
       display: flex;
       flex-direction: column;
@@ -80,9 +67,7 @@
       overflow: hidden;
     }
 
-    /* ─────────────────────────────────────────────── */
-    /* WEATHER — top half                              */
-    /* ─────────────────────────────────────────────── */
+    /* ── WEATHER (top 50%) ── */
     #weather-section {
       flex: 0 0 50%;
       display: flex;
@@ -92,28 +77,22 @@
       overflow: hidden;
     }
 
-    /* horizontal scrolling hourly cells */
+    /* 8 equal columns, one per hour */
     #hourly-strip {
       flex: 1;
-      display: flex;
-      flex-direction: row;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scrollbar-width: none;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
       min-height: 0;
+      overflow: hidden;
     }
-    #hourly-strip::-webkit-scrollbar { display: none; }
 
     .h-cell {
-      flex: 1 0 0;           /* equal width, don't shrink below 0 */
-      min-width: 56px;
-      max-width: 90px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      padding: 6px 2px;
+      gap: 4px;
+      padding: 8px 4px 6px;
       border-right: 1px solid var(--rule2);
     }
     .h-cell:last-child { border-right: none; }
@@ -121,17 +100,17 @@
 
     .hc-time {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.68em;
+      font-size: 0.7em;
       color: var(--ink3);
       letter-spacing: 0.04em;
     }
     .h-cell.now .hc-time { font-weight: 700; color: var(--ink); }
 
-    .hc-icon { font-size: 1.6em; line-height: 1; }
+    .hc-icon { font-size: 2em; line-height: 1; }
 
     .hc-temp {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.88em;
+      font-size: 1em;
       font-weight: 700;
       color: var(--ink);
     }
@@ -139,40 +118,37 @@
       font-size: 0.55em;
       color: var(--ink4);
       text-align: center;
-      line-height: 1.25;
-      max-width: 54px;
+      line-height: 1.2;
     }
 
     /* tomorrow bar */
     #tmr-bar {
       border-top: 1px solid var(--rule);
-      padding: 4px 14px;
-      display: flex;
+      padding: 5px 14px;
+      display: none;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       background: var(--hi);
       flex-shrink: 0;
     }
     .tmr-lbl {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.58em;
+      font-size: 0.6em;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--ink3);
       white-space: nowrap;
     }
-    .tmr-icon { font-size: 1.2em; }
-    .tmr-desc { font-size: 0.75em; color: var(--ink2); flex: 1; }
+    .tmr-icon { font-size: 1.4em; }
+    .tmr-desc { font-size: 0.78em; color: var(--ink2); flex: 1; }
     .tmr-range {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.76em;
+      font-size: 0.78em;
       color: var(--ink2);
       white-space: nowrap;
     }
 
-    /* ─────────────────────────────────────────────── */
-    /* DEPARTURES — bottom half                        */
-    /* ─────────────────────────────────────────────── */
+    /* ── DEPARTURES (bottom 50%) ── */
     #bus-section {
       flex: 1;
       display: flex;
@@ -202,11 +178,10 @@
       color: var(--ink4);
     }
 
-    /* two-column grid of departures */
+    /* two-column grid */
     #bus-scroll {
       flex: 1;
       overflow-y: auto;
-      overflow-x: hidden;
       scrollbar-width: none;
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -222,7 +197,6 @@
       padding: 5px 12px;
       border-bottom: 1px solid var(--rule2);
     }
-    /* right-column rows get a left border */
     .b-row:nth-child(even) { border-left: 1px solid var(--rule2); }
 
     .b-badge {
@@ -236,9 +210,7 @@
       min-width: 34px;
       border: 1.5px solid var(--ink);
       letter-spacing: 0.03em;
-      white-space: nowrap;
     }
-    /* visual type differentiation without colour */
     .t-ubahn { border-width: 2.5px; }
     .t-sbahn { border-style: dashed; }
     .t-tram  { border-radius: 8px; }
@@ -256,49 +228,26 @@
       font-size: 0.86em;
       font-weight: 700;
       text-align: right;
-      white-space: nowrap;
     }
     .b-min.now  { font-style: italic; }
     .b-min.late { color: var(--ink4); font-weight: 400; }
 
-    /* ─────────────────────────────────────────────── */
-    /* MESSAGES                                        */
-    /* ─────────────────────────────────────────────── */
     .msg {
       padding: 12px 14px;
       font-size: 0.75em;
       color: var(--ink4);
       font-style: italic;
       line-height: 1.7;
-      grid-column: 1 / -1;   /* span full width if inside grid */
+      grid-column: 1 / -1;
     }
     .msg a { color: var(--ink2); }
-    .msg code {
-      font-family: 'Courier Prime', monospace;
-      font-size: 0.9em;
-      background: var(--hi);
-      padding: 1px 4px;
-    }
-    .setup-steps {
-      font-style: normal;
-      font-size: 0.72em;
-      color: var(--ink3);
-      line-height: 1.8;
-      grid-column: 1 / -1;
-      padding: 10px 14px;
-      border-top: 1px solid var(--rule2);
-    }
-    .setup-steps b { font-style: normal; color: var(--ink); }
 
-    /* ─────────────────────────────────────────────── */
-    /* FOOTER                                          */
-    /* ─────────────────────────────────────────────── */
+    /* ── FOOTER ── */
     #footer {
       border-top: 1.5px solid var(--ink);
       padding: 3px 16px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
       font-family: 'Courier Prime', monospace;
       font-size: 0.58em;
       letter-spacing: 0.12em;
@@ -310,22 +259,18 @@
 </head>
 <body>
 
-<!-- ── HEADER ─────────────────────────────────────── -->
 <div id="header">
   <div class="h-loc">Munich · Kiefernstraße</div>
   <div id="clock">--:--:--</div>
   <div id="date-lbl">---</div>
 </div>
 
-<!-- ── MAIN ───────────────────────────────────────── -->
 <div id="main">
-
-  <!-- Weather top -->
   <div id="weather-section">
     <div id="hourly-strip">
-      <div class="msg" style="align-self:center">Loading weather…</div>
+      <div class="msg">Loading weather…</div>
     </div>
-    <div id="tmr-bar" style="display:none">
+    <div id="tmr-bar">
       <span class="tmr-lbl">Tomorrow</span>
       <span class="tmr-icon" id="tmr-icon"></span>
       <span class="tmr-desc" id="tmr-desc"></span>
@@ -333,7 +278,6 @@
     </div>
   </div>
 
-  <!-- Departures bottom -->
   <div id="bus-section">
     <div class="sec-head">
       <span class="sec-title">Departures</span>
@@ -343,24 +287,18 @@
       <div class="msg">Loading departures…</div>
     </div>
   </div>
-
 </div>
 
-<!-- ── FOOTER ─────────────────────────────────────── -->
 <div id="footer">
   <span>Live</span>
   <span id="cntdwn">Refresh in 2:00</span>
 </div>
 
 <script>
-// ─────────────────────────────────────────────────────────────
-// CONFIG — paste your Cloudflare Worker URL here after deploying
-// ─────────────────────────────────────────────────────────────
+// ── CONFIG ────────────────────────────────────────────────────
 const WORKER_URL = 'https://door-display.schickja.workers.dev';
-// Leave blank to show setup instructions instead of an error:
-//   const WORKER_URL = '';
 
-// ─────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────
 const pad = n => String(n).padStart(2, '0');
 
 // Clock
@@ -381,7 +319,7 @@ setInterval(() => {
     `Refresh in ${Math.floor(secs/60)}:${pad(secs%60)}`;
 }, 1000);
 
-// ── Weather (open-meteo — CORS-friendly, no proxy needed) ─────
+// ── Weather ───────────────────────────────────────────────────
 const WMO = {
   0:['☀️','Clear'], 1:['🌤️','Mainly clear'], 2:['⛅','Partly cloudy'], 3:['☁️','Overcast'],
   45:['🌫️','Fog'], 48:['🌫️','Icy fog'],
@@ -428,7 +366,7 @@ async function loadWeather() {
     }
     strip.innerHTML = html || '<div class="msg">No data</div>';
 
-    // Tomorrow summary
+    // Tomorrow
     if (d.daily?.time?.length > 1) {
       const [ti, td] = wdesc(d.daily.weather_code[1]);
       document.getElementById('tmr-icon').textContent = ti;
@@ -438,42 +376,35 @@ async function loadWeather() {
       tmrBar.style.display = 'flex';
     }
   } catch(e) {
-    strip.innerHTML = `<div class="msg" style="align-self:center">Weather error: ${e.message}</div>`;
+    strip.innerHTML = `<div class="msg">Weather error: ${e.message}</div>`;
   }
 }
 
-// ── MVG Departures via Cloudflare Worker proxy ────────────────
+// ── MVG Departures ────────────────────────────────────────────
 async function loadDepartures() {
   const scroll = document.getElementById('bus-scroll');
   const sub    = document.getElementById('bus-sub');
-
-  // If worker URL not configured, show setup instructions
-  if (!WORKER_URL || WORKER_URL.includes('YOUR-NAME')) {
-    scroll.innerHTML = `
-      <div class="msg">Departures need a one-time proxy setup:</div>
-      <div class="setup-steps">
-        <b>1.</b> Go to <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a> (free account)<br>
-        <b>2.</b> Workers &amp; Pages → Create Worker<br>
-        <b>3.</b> Paste the contents of <code>mvg-worker.js</code> → Deploy<br>
-        <b>4.</b> Copy your worker URL (e.g. <code>https://mvg-proxy.xyz.workers.dev</code>)<br>
-        <b>5.</b> Replace <code>YOUR-NAME</code> in <code>WORKER_URL</code> at top of this file<br>
-        <b>6.</b> Push to GitHub — departures will work on the tablet!
-      </div>`;
-    return;
-  }
-
   try {
     const r = await fetch(`${WORKER_URL}?limit=16`);
-    if (!r.ok) throw new Error('Worker HTTP ' + r.status);
-    const deps = await r.json();
+    // Read body as text first so we can show it on error
+    const body = await r.text();
+    if (!r.ok) throw new Error(`Worker ${r.status}: ${body.slice(0, 200)}`);
 
+    let deps;
+    try { deps = JSON.parse(body); }
+    catch { throw new Error(`JSON parse failed. Got: ${body.slice(0, 200)}`); }
+
+    // Handle wrapped response shapes
+    if (deps && !Array.isArray(deps)) {
+      deps = deps.departures || deps.departureList || Object.values(deps)[0];
+    }
     if (!Array.isArray(deps) || deps.length === 0)
-      throw new Error('No departures returned');
+      throw new Error('No departures in response');
 
     const now = Date.now();
     sub.textContent = `Kiefernstraße · ${deps.length} deps`;
 
-    const tcls = t => ({'UBAHN':'t-ubahn','SBAHN':'t-sbahn','TRAM':'t-tram','BUS':'t-bus'}[t] || '');
+    const tcls = t => ({'UBAHN':'t-ubahn','SBAHN':'t-sbahn','TRAM':'t-tram','BUS':'t-bus'}[t]||'');
     const mcls = m => m <= 0 ? 'now' : m > 15 ? 'late' : '';
     const mlbl = m => m <= 0 ? 'jetzt' : `${m}'`;
 
@@ -491,8 +422,7 @@ async function loadDepartures() {
     }).join('');
 
   } catch(e) {
-    scroll.innerHTML = `<div class="msg">Departures error: ${e.message}<br>
-      <a href="https://www.mvg.de/#departure/de:09162:730" target="_blank">→ Open MVG Live ↗</a></div>`;
+    scroll.innerHTML = `<div class="msg">${e.message}</div>`;
   }
 }
 
