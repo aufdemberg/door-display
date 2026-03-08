@@ -510,22 +510,28 @@ async function loadWeather() {
       if (hr >= 12 && hr <= 17) pmIdxs.push(i);
     });
 
-    const avgCode = idxs => idxs.length
-      ? Math.round(idxs.reduce((s,i) => s + codes[i], 0) / idxs.length) : 0;
+    // Mode (most common code), not average — averaging WMO codes is meaningless
+    const modeCode = idxs => {
+      if (!idxs.length) return null;
+      const freq = {};
+      idxs.forEach(i => { freq[codes[i]] = (freq[codes[i]] || 0) + 1; });
+      return parseInt(Object.entries(freq).sort((a,b) => b[1]-a[1])[0][0], 10);
+    };
     const avgTemp = idxs => idxs.length
       ? Math.round(idxs.reduce((s,i) => s + temps[i], 0) / idxs.length) : null;
 
     if (amIdxs.length || pmIdxs.length) {
-      const [ai, ad] = wdesc(avgCode(amIdxs));
-      const [pi, pd] = wdesc(avgCode(pmIdxs));
+      const amCode = modeCode(amIdxs), pmCode = modeCode(pmIdxs);
+      const [ai, ad] = amCode !== null ? wdesc(amCode) : ['❓','?'];
+      const [pi, pd] = pmCode !== null ? wdesc(pmCode) : ['❓','?'];
       const at = avgTemp(amIdxs), pt = avgTemp(pmIdxs);
 
       document.getElementById('tmr-am-icon').textContent = ai;
       document.getElementById('tmr-am-desc').textContent = ad;
-      document.getElementById('tmr-am-temp').textContent = at !== null ? `${at}°` : '';
+      document.getElementById('tmr-am-temp').textContent = at !== null ? at + '°' : '–';
       document.getElementById('tmr-pm-icon').textContent = pi;
       document.getElementById('tmr-pm-desc').textContent = pd;
-      document.getElementById('tmr-pm-temp').textContent = pt !== null ? `${pt}°` : '';
+      document.getElementById('tmr-pm-temp').textContent = pt !== null ? pt + '°' : '–';
       tmrBar.style.display = 'flex';
     }
   } catch(e) {
