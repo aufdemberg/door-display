@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Door Display</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; color: white; background: #111; overflow: hidden; }
+    #container { height: 100vh; display: flex; flex-direction: column; }
+    #weather { flex: 1; background: #222; padding: 20px; font-size: 2.5em; text-align: center; }
+    #bus { flex: 1; background: #333; padding: 20px; font-size: 2em; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="weather">Loading weather for Munich...</div>
+    <div id="bus">Loading next bus times...</div>
+  </div>
+
+  <script>
+    // === WEATHER (using free OpenWeatherMap API) ===
+    // 1. Go to https://openweathermap.org, sign up free, get your API key (email confirmation needed, takes ~10 min to activate)
+    // 2. Replace YOUR_API_KEY below with it (looks like 1234567890abcdef1234567890abcdef)
+    const weatherApiKey = 'YOUR_API_KEY';
+    const city = 'Munich,DE'; // Change if not Munich
+
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${weatherApiKey}&units=metric`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.main) {
+          document.getElementById('weather').innerHTML = `${data.name}: ${Math.round(data.main.temp)}°C<br>${data.weather[0].description}`;
+        } else {
+          document.getElementById('weather').innerText = 'Weather data unavailable';
+        }
+      })
+      .catch(() => document.getElementById('weather').innerText = 'Weather fetch error');
+
+    // === BUS TIMES ===
+    // For now, placeholder. Replace the fetch URL with your real one (see below for MVV options)
+    fetch('https://example.com/bus-times')  // <-- CHANGE THIS
+      .then(response => response.json())
+      .then(times => {
+        document.getElementById('bus').innerText = 'Next departures:\n' + times.join('\n');
+      })
+      .catch(() => document.getElementById('bus').innerText = 'Bus times unavailable - check setup');
+
+    // Auto-refresh the whole page every 60 seconds for live updates
+    setInterval(() => location.reload(), 60000);
+  </script>
+</body>
+</html>
