@@ -3,115 +3,501 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Door Display - Weather & Bus</title>
+  <title>Door Display</title>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:wght@300;400;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #fff;
-      background: #000;
-      height: 100vh;
-      overflow: hidden;
+    /* ── PAPERWHITE PALETTE ───────────────────────── */
+    :root {
+      --paper:  #f0ece0;
+      --ink:    #1a1814;
+      --ink2:   #3d3830;
+      --ink3:   #6b6459;
+      --ink4:   #a09890;
+      --rule:   #c4bba8;
+      --rule2:  #ddd6c8;
+      --hi:     rgba(26,24,20,0.06);
     }
-    #container {
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Literata', Georgia, serif;
+      background: var(--paper);
+      color: var(--ink);
       display: flex;
       flex-direction: column;
-      height: 100%;
+      height: 100vh;
+      /* subtle grain */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
     }
-    #weather {
-      background: #1a1a2e;
-      padding: 10px;
-      font-size: 1.4em; /* Smaller text */
-      text-align: center;
-      flex: 0 0 35%; /* Top ~35% for weather */
-      overflow-y: auto;
-    }
-    #bus {
-      flex: 1; /* Bottom takes most space */
-      background: #16213e;
-      padding: 0;
-      overflow: hidden;
-    }
-    #bus iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    .hour {
+
+    /* ─────────────────────────────────────────────── */
+    /* HEADER                                          */
+    /* ─────────────────────────────────────────────── */
+    #header {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid #333;
-      font-size: 1.1em; /* Even smaller per row */
+      align-items: center;
+      padding: 6px 16px;
+      border-bottom: 2px solid var(--ink);
+      flex-shrink: 0;
+      gap: 10px;
     }
-    .hour:last-child { border-bottom: none; }
-    .loading { color: #aaa; }
-    h2 { margin: 5px 0; font-size: 1.3em; }
+    .h-loc {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.62em;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      white-space: nowrap;
+    }
+    #clock {
+      font-size: 2em;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    #date-lbl {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6em;
+      letter-spacing: 0.08em;
+      color: var(--ink3);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* ─────────────────────────────────────────────── */
+    /* MAIN — vertical stack                           */
+    /* ─────────────────────────────────────────────── */
+    #main {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ─────────────────────────────────────────────── */
+    /* WEATHER — top half                              */
+    /* ─────────────────────────────────────────────── */
+    #weather-section {
+      flex: 0 0 50%;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 2px solid var(--ink);
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* horizontal scrolling hourly cells */
+    #hourly-strip {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      min-height: 0;
+    }
+    #hourly-strip::-webkit-scrollbar { display: none; }
+
+    .h-cell {
+      flex: 1 0 0;           /* equal width, don't shrink below 0 */
+      min-width: 56px;
+      max-width: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 6px 2px;
+      border-right: 1px solid var(--rule2);
+    }
+    .h-cell:last-child { border-right: none; }
+    .h-cell.now { background: var(--hi); }
+
+    .hc-time {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.68em;
+      color: var(--ink3);
+      letter-spacing: 0.04em;
+    }
+    .h-cell.now .hc-time { font-weight: 700; color: var(--ink); }
+
+    .hc-icon { font-size: 1.6em; line-height: 1; }
+
+    .hc-temp {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.88em;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .hc-desc {
+      font-size: 0.55em;
+      color: var(--ink4);
+      text-align: center;
+      line-height: 1.25;
+      max-width: 54px;
+    }
+
+    /* tomorrow bar */
+    #tmr-bar {
+      border-top: 1px solid var(--rule);
+      padding: 4px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--hi);
+      flex-shrink: 0;
+    }
+    .tmr-lbl {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.58em;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      white-space: nowrap;
+    }
+    .tmr-icon { font-size: 1.2em; }
+    .tmr-desc { font-size: 0.75em; color: var(--ink2); flex: 1; }
+    .tmr-range {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.76em;
+      color: var(--ink2);
+      white-space: nowrap;
+    }
+
+    /* ─────────────────────────────────────────────── */
+    /* DEPARTURES — bottom half                        */
+    /* ─────────────────────────────────────────────── */
+    #bus-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .sec-head {
+      padding: 4px 14px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-shrink: 0;
+    }
+    .sec-title {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.62em;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink3);
+    }
+    .sec-sub {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.58em;
+      color: var(--ink4);
+    }
+
+    /* two-column grid of departures */
+    #bus-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-content: start;
+    }
+    #bus-scroll::-webkit-scrollbar { display: none; }
+
+    .b-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 36px;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-bottom: 1px solid var(--rule2);
+    }
+    /* right-column rows get a left border */
+    .b-row:nth-child(even) { border-left: 1px solid var(--rule2); }
+
+    .b-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.7em;
+      font-weight: 700;
+      padding: 1px 3px;
+      min-width: 34px;
+      border: 1.5px solid var(--ink);
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+    /* visual type differentiation without colour */
+    .t-ubahn { border-width: 2.5px; }
+    .t-sbahn { border-style: dashed; }
+    .t-tram  { border-radius: 8px; }
+    .t-bus   { border-style: dotted; border-width: 2px; }
+
+    .b-dest {
+      font-size: 0.76em;
+      color: var(--ink2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .b-min {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.86em;
+      font-weight: 700;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .b-min.now  { font-style: italic; }
+    .b-min.late { color: var(--ink4); font-weight: 400; }
+
+    /* ─────────────────────────────────────────────── */
+    /* MESSAGES                                        */
+    /* ─────────────────────────────────────────────── */
+    .msg {
+      padding: 12px 14px;
+      font-size: 0.75em;
+      color: var(--ink4);
+      font-style: italic;
+      line-height: 1.7;
+      grid-column: 1 / -1;   /* span full width if inside grid */
+    }
+    .msg a { color: var(--ink2); }
+    .msg code {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.9em;
+      background: var(--hi);
+      padding: 1px 4px;
+    }
+    .setup-steps {
+      font-style: normal;
+      font-size: 0.72em;
+      color: var(--ink3);
+      line-height: 1.8;
+      grid-column: 1 / -1;
+      padding: 10px 14px;
+      border-top: 1px solid var(--rule2);
+    }
+    .setup-steps b { font-style: normal; color: var(--ink); }
+
+    /* ─────────────────────────────────────────────── */
+    /* FOOTER                                          */
+    /* ─────────────────────────────────────────────── */
+    #footer {
+      border-top: 1.5px solid var(--ink);
+      padding: 3px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.58em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink4);
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="weather" class="loading">
-      <h2>Munich Next 8 Hours</h2>
-      <div>Loading...</div>
-    </div>
 
-    <div id="bus">
-      <!-- MVV EFA departures - search "Kiefernstraße" on first load -->
-      <iframe src="https://efa.mvv-muenchen.de/index.html" 
-              title="MVV Departures - Search Kiefernstraße"></iframe>
+<!-- ── HEADER ─────────────────────────────────────── -->
+<div id="header">
+  <div class="h-loc">Munich · Kiefernstraße</div>
+  <div id="clock">--:--:--</div>
+  <div id="date-lbl">---</div>
+</div>
+
+<!-- ── MAIN ───────────────────────────────────────── -->
+<div id="main">
+
+  <!-- Weather top -->
+  <div id="weather-section">
+    <div id="hourly-strip">
+      <div class="msg" style="align-self:center">Loading weather…</div>
+    </div>
+    <div id="tmr-bar" style="display:none">
+      <span class="tmr-lbl">Tomorrow</span>
+      <span class="tmr-icon" id="tmr-icon"></span>
+      <span class="tmr-desc" id="tmr-desc"></span>
+      <span class="tmr-range" id="tmr-range"></span>
     </div>
   </div>
 
-  <script>
-    // Open-Meteo: Next ~8 hours from now (forecast starts near current time)
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=48.1351&longitude=11.5820&hourly=temperature_2m,weather_code&timezone=Europe%2FBerlin&forecast_days=1')
-      .then(res => res.json())
-      .then(data => {
-        const hourly = data.hourly;
-        const times = hourly.time;
-        const temps = hourly.temperature_2m;
-        const codes = hourly.weather_code;
+  <!-- Departures bottom -->
+  <div id="bus-section">
+    <div class="sec-head">
+      <span class="sec-title">Departures</span>
+      <span class="sec-sub" id="bus-sub">Kiefernstraße</span>
+    </div>
+    <div id="bus-scroll">
+      <div class="msg">Loading departures…</div>
+    </div>
+  </div>
 
-        // Find approximate "now" index (first hour >= current time, but approx first 8 for simplicity)
-        let html = '';
-        const maxHours = Math.min(8, times.length);
-        for (let i = 0; i < maxHours; i++) {
-          const timeStr = times[i].split('T')[1].slice(0, 5); // HH:MM
-          const temp = Math.round(temps[i]);
-          const desc = getWeatherDesc(codes[i]);
-          html += `
-            <div class="hour">
-              <span>${timeStr}</span>
-              <span>${temp}°C</span>
-              <span>${desc.emoji} ${desc.text}</span>
-            </div>
-          `;
-        }
-        document.getElementById('weather').innerHTML = '<h2>Munich Next 8 Hours</h2>' + html;
-        document.getElementById('weather').classList.remove('loading');
-      })
-      .catch(() => {
-        document.getElementById('weather').innerText = 'Weather unavailable';
-        document.getElementById('weather').classList.remove('loading');
-      });
+</div>
 
-    // WMO code to emoji + short text
-    function getWeatherDesc(code) {
-      if (code === 0) return { text: 'Clear', emoji: '☀️' };
-      if ([1,2,3].includes(code)) return { text: 'Clear/Cloudy', emoji: '🌤️' };
-      if ([45,48].includes(code)) return { text: 'Fog', emoji: '🌫️' };
-      if ([51,53,55].includes(code)) return { text: 'Drizzle', emoji: '🌧️' };
-      if ([61,63,65].includes(code)) return { text: 'Rain', emoji: '🌧️' };
-      if ([71,73,75].includes(code)) return { text: 'Snow', emoji: '❄️' };
-      if ([80,81,82].includes(code)) return { text: 'Showers', emoji: '🌦️' };
-      if ([95,96,99].includes(code)) return { text: 'Thunder', emoji: '⛈️' };
-      return { text: '?', emoji: '❓' };
+<!-- ── FOOTER ─────────────────────────────────────── -->
+<div id="footer">
+  <span>Live</span>
+  <span id="cntdwn">Refresh in 2:00</span>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// CONFIG — paste your Cloudflare Worker URL here after deploying
+// ─────────────────────────────────────────────────────────────
+const WORKER_URL = 'https://mvg-proxy.YOUR-NAME.workers.dev';
+// Leave blank to show setup instructions instead of an error:
+//   const WORKER_URL = '';
+
+// ─────────────────────────────────────────────────────────────
+const pad = n => String(n).padStart(2, '0');
+
+// Clock
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  document.getElementById('date-lbl').textContent =
+    n.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+}
+setInterval(tick, 1000); tick();
+
+// Countdown
+let secs = 120;
+setInterval(() => {
+  if (--secs <= 0) { location.reload(); return; }
+  document.getElementById('cntdwn').textContent =
+    `Refresh in ${Math.floor(secs/60)}:${pad(secs%60)}`;
+}, 1000);
+
+// ── Weather (open-meteo — CORS-friendly, no proxy needed) ─────
+const WMO = {
+  0:['☀️','Clear'], 1:['🌤️','Mainly clear'], 2:['⛅','Partly cloudy'], 3:['☁️','Overcast'],
+  45:['🌫️','Fog'], 48:['🌫️','Icy fog'],
+  51:['🌦️','Lt drizzle'], 53:['🌦️','Drizzle'], 55:['🌧️','Hvy drizzle'],
+  61:['🌧️','Lt rain'], 63:['🌧️','Rain'], 65:['🌧️','Hvy rain'],
+  71:['❄️','Lt snow'], 73:['❄️','Snow'], 75:['❄️','Hvy snow'], 77:['🌨️','Grains'],
+  80:['🌦️','Showers'], 81:['🌦️','Showers'], 82:['⛈️','Hvy showers'],
+  85:['🌨️','Snow showers'], 86:['🌨️','Snow showers'],
+  95:['⛈️','Thunder'], 96:['⛈️','Thunder'], 99:['⛈️','Thunder'],
+};
+const wdesc = c => WMO[c] || WMO[Math.floor(c/10)*10] || ['❓','?'];
+
+async function loadWeather() {
+  const strip = document.getElementById('hourly-strip');
+  const tmrBar = document.getElementById('tmr-bar');
+  try {
+    const r = await fetch(
+      'https://api.open-meteo.com/v1/forecast'
+      + '?latitude=48.1351&longitude=11.5820'
+      + '&hourly=temperature_2m,weather_code'
+      + '&daily=weather_code,temperature_2m_max,temperature_2m_min'
+      + '&timezone=Europe%2FBerlin&forecast_days=3'
+    );
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    const {time:times, temperature_2m:temps, weather_code:codes} = d.hourly;
+
+    const now = new Date();
+    const nowStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:00`;
+    let start = times.findIndex(t => t >= nowStr);
+    if (start < 0) start = 0;
+    const count = Math.min(8, times.length - start);
+
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      const idx = start + i;
+      const [icon, desc] = wdesc(codes[idx]);
+      html += `<div class="h-cell${i===0?' now':''}">
+        <span class="hc-time">${times[idx].split('T')[1].slice(0,5)}</span>
+        <span class="hc-icon">${icon}</span>
+        <span class="hc-temp">${Math.round(temps[idx])}°</span>
+        <span class="hc-desc">${desc}</span>
+      </div>`;
     }
+    strip.innerHTML = html || '<div class="msg">No data</div>';
 
-    // Refresh every 2 minutes for live bus updates (weather changes slower)
-    setInterval(() => location.reload(), 120000);
-  </script>
+    // Tomorrow summary
+    if (d.daily?.time?.length > 1) {
+      const [ti, td] = wdesc(d.daily.weather_code[1]);
+      document.getElementById('tmr-icon').textContent = ti;
+      document.getElementById('tmr-desc').textContent = td;
+      document.getElementById('tmr-range').textContent =
+        `${Math.round(d.daily.temperature_2m_min[1])}°–${Math.round(d.daily.temperature_2m_max[1])}°`;
+      tmrBar.style.display = 'flex';
+    }
+  } catch(e) {
+    strip.innerHTML = `<div class="msg" style="align-self:center">Weather error: ${e.message}</div>`;
+  }
+}
+
+// ── MVG Departures via Cloudflare Worker proxy ────────────────
+async function loadDepartures() {
+  const scroll = document.getElementById('bus-scroll');
+  const sub    = document.getElementById('bus-sub');
+
+  // If worker URL not configured, show setup instructions
+  if (!WORKER_URL || WORKER_URL.includes('YOUR-NAME')) {
+    scroll.innerHTML = `
+      <div class="msg">Departures need a one-time proxy setup:</div>
+      <div class="setup-steps">
+        <b>1.</b> Go to <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a> (free account)<br>
+        <b>2.</b> Workers &amp; Pages → Create Worker<br>
+        <b>3.</b> Paste the contents of <code>mvg-worker.js</code> → Deploy<br>
+        <b>4.</b> Copy your worker URL (e.g. <code>https://mvg-proxy.xyz.workers.dev</code>)<br>
+        <b>5.</b> Replace <code>YOUR-NAME</code> in <code>WORKER_URL</code> at top of this file<br>
+        <b>6.</b> Push to GitHub — departures will work on the tablet!
+      </div>`;
+    return;
+  }
+
+  try {
+    const r = await fetch(`${WORKER_URL}?limit=16`);
+    if (!r.ok) throw new Error('Worker HTTP ' + r.status);
+    const deps = await r.json();
+
+    if (!Array.isArray(deps) || deps.length === 0)
+      throw new Error('No departures returned');
+
+    const now = Date.now();
+    sub.textContent = `Kiefernstraße · ${deps.length} deps`;
+
+    const tcls = t => ({'UBAHN':'t-ubahn','SBAHN':'t-sbahn','TRAM':'t-tram','BUS':'t-bus'}[t] || '');
+    const mcls = m => m <= 0 ? 'now' : m > 15 ? 'late' : '';
+    const mlbl = m => m <= 0 ? 'jetzt' : `${m}'`;
+
+    scroll.innerHTML = deps.map(dep => {
+      const depMs = dep.realtimeDepartureTime || dep.plannedDepartureTime || 0;
+      const mins  = Math.round((depMs - now) / 60000);
+      const line  = dep.label || '?';
+      const dest  = dep.destination || '?';
+      const type  = (dep.transportType || 'BUS').toUpperCase();
+      return `<div class="b-row">
+        <span class="b-badge ${tcls(type)}">${line}</span>
+        <span class="b-dest">${dest}</span>
+        <span class="b-min ${mcls(mins)}">${mlbl(mins)}</span>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    scroll.innerHTML = `<div class="msg">Departures error: ${e.message}<br>
+      <a href="https://www.mvg.de/#departure/de:09162:730" target="_blank">→ Open MVG Live ↗</a></div>`;
+  }
+}
+
+loadWeather();
+loadDepartures();
+</script>
 </body>
 </html>
