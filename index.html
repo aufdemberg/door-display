@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Door Display v4</title>
+  <title>Door Display v5</title>
   <link href="https://fonts.googleapis.com/css2?family=Literata:wght@300;400;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -31,7 +31,7 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
     }
 
-    /* ── HEADER: clock dominates ── */
+    /* ── HEADER ── */
     #header {
       display: flex;
       flex-direction: column;
@@ -42,7 +42,7 @@
       position: relative;
     }
     #clock {
-      font-size: 3.2em;
+      font-size: 3.4em;
       font-weight: 300;
       letter-spacing: 0.08em;
       font-variant-numeric: tabular-nums;
@@ -50,18 +50,17 @@
     }
     #date-lbl {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.72em;
-      letter-spacing: 0.12em;
+      font-size: 0.85em;
+      letter-spacing: 0.1em;
       color: var(--ink3);
-      margin-top: 2px;
+      margin-top: 1px;
     }
     .h-loc {
       position: absolute;
-      top: 10px;
-      right: 14px;
+      top: 10px; right: 14px;
       font-family: 'Courier Prime', monospace;
-      font-size: 0.58em;
-      letter-spacing: 0.18em;
+      font-size: 0.6em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--ink4);
     }
@@ -75,7 +74,31 @@
       overflow: hidden;
     }
 
-    /* ── WEATHER (top ~50%) ── */
+    /* ── SECTION HEADERS — same visual weight as main header ── */
+    .sec-head {
+      padding: 4px 14px;
+      border-bottom: 1.5px solid var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-shrink: 0;
+    }
+    .sec-title {
+      font-family: 'Courier Prime', monospace;
+      font-size: 1em;           /* big — same scale as header date */
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    .sec-sub {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.65em;
+      color: var(--ink4);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── WEATHER ── */
     #weather-section {
       flex: 0 0 50%;
       display: flex;
@@ -85,29 +108,14 @@
       overflow: hidden;
     }
 
-    .wx-label {
-      padding: 2px 12px;
-      border-bottom: 1px solid var(--rule);
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      flex-shrink: 0;
-    }
-    .wx-label span {
-      font-family: 'Courier Prime', monospace;
-      font-size: 0.58em;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--ink3);
-    }
-
-    /* Two rows of 4 */
+    /* 4 cols × 2 rows */
     #hourly-grid {
       flex: 1;
       display: grid;
-      grid-template-rows: 1fr 1fr;
       grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 1fr 1fr;
       min-height: 0;
+      overflow: hidden;
     }
 
     .h-cell {
@@ -120,35 +128,29 @@
       border-right: 1px solid var(--rule2);
       border-bottom: 1px solid var(--rule2);
     }
-    /* remove right border on last of each row */
-    .h-cell:nth-child(4),
-    .h-cell:nth-child(8) { border-right: none; }
-    /* remove bottom border on bottom row */
-    .h-cell:nth-child(5),
-    .h-cell:nth-child(6),
-    .h-cell:nth-child(7),
-    .h-cell:nth-child(8) { border-bottom: none; }
+    .h-cell:nth-child(4n)    { border-right: none; }
+    .h-cell:nth-child(n+5)   { border-bottom: none; }
     .h-cell.now { background: var(--hi); }
 
     .hc-time {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.72em;
+      font-size: 0.78em;
       color: var(--ink3);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
     }
     .h-cell.now .hc-time { font-weight: 700; color: var(--ink); }
 
-    .hc-icon { font-size: 2em; line-height: 1; }
+    .hc-icon  { font-size: 2.2em; line-height: 1; }
 
     .hc-temp {
       font-family: 'Courier Prime', monospace;
-      font-size: 1em;
+      font-size: 1.1em;
       font-weight: 700;
       color: var(--ink);
     }
     .hc-desc {
-      font-size: 0.56em;
-      color: var(--ink4);
+      font-size: 0.68em;
+      color: var(--ink3);
       text-align: center;
       line-height: 1.2;
     }
@@ -156,7 +158,7 @@
     /* tomorrow bar */
     #tmr-bar {
       border-top: 1px solid var(--rule);
-      padding: 4px 14px;
+      padding: 5px 14px;
       display: none;
       align-items: center;
       gap: 10px;
@@ -165,48 +167,30 @@
     }
     .tmr-lbl {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.58em;
-      letter-spacing: 0.18em;
+      font-size: 0.72em;
+      font-weight: 700;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--ink3);
       white-space: nowrap;
     }
-    .tmr-icon { font-size: 1.3em; }
-    .tmr-desc { font-size: 0.76em; color: var(--ink2); flex: 1; }
+    .tmr-icon { font-size: 1.5em; }
+    .tmr-desc { font-size: 0.88em; color: var(--ink2); flex: 1; }
     .tmr-range {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.76em;
-      color: var(--ink2);
+      font-size: 0.88em;
+      font-weight: 700;
+      color: var(--ink);
       white-space: nowrap;
     }
 
-    /* ── DEPARTURES (bottom ~50%) ── */
+    /* ── DEPARTURES ── */
     #bus-section {
       flex: 1;
       display: flex;
       flex-direction: column;
       min-height: 0;
       overflow: hidden;
-    }
-    .sec-head {
-      padding: 3px 14px;
-      border-bottom: 1px solid var(--rule);
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      flex-shrink: 0;
-    }
-    .sec-title {
-      font-family: 'Courier Prime', monospace;
-      font-size: 0.6em;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--ink3);
-    }
-    .sec-sub {
-      font-family: 'Courier Prime', monospace;
-      font-size: 0.56em;
-      color: var(--ink4);
     }
     #bus-scroll {
       flex: 1;
@@ -220,7 +204,7 @@
 
     .b-row {
       display: grid;
-      grid-template-columns: 44px 1fr 36px;
+      grid-template-columns: 48px 1fr 40px;
       align-items: center;
       gap: 6px;
       padding: 5px 12px;
@@ -233,12 +217,11 @@
       align-items: center;
       justify-content: center;
       font-family: 'Courier Prime', monospace;
-      font-size: 0.72em;
+      font-size: 0.8em;
       font-weight: 700;
-      padding: 1px 3px;
-      min-width: 34px;
+      padding: 2px 4px;
+      min-width: 36px;
       border: 1.5px solid var(--ink);
-      letter-spacing: 0.03em;
     }
     .t-ubahn { border-width: 2.5px; }
     .t-sbahn { border-style: dashed; }
@@ -246,7 +229,7 @@
     .t-bus   { border-style: dotted; border-width: 2px; }
 
     .b-dest {
-      font-size: 0.78em;
+      font-size: 0.85em;
       color: var(--ink2);
       white-space: nowrap;
       overflow: hidden;
@@ -254,7 +237,7 @@
     }
     .b-min {
       font-family: 'Courier Prime', monospace;
-      font-size: 0.88em;
+      font-size: 0.95em;
       font-weight: 700;
       text-align: right;
     }
@@ -263,7 +246,7 @@
 
     .msg {
       padding: 12px 14px;
-      font-size: 0.75em;
+      font-size: 0.8em;
       color: var(--ink4);
       font-style: italic;
       line-height: 1.7;
@@ -278,7 +261,7 @@
       display: flex;
       justify-content: space-between;
       font-family: 'Courier Prime', monospace;
-      font-size: 0.56em;
+      font-size: 0.62em;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--ink4);
@@ -297,9 +280,9 @@
 <div id="main">
 
   <div id="weather-section">
-    <div class="wx-label">
-      <span>Weather</span>
-      <span id="wx-updated"></span>
+    <div class="sec-head">
+      <span class="sec-title">Weather</span>
+      <span class="sec-sub" id="wx-sub">Next 8 hours</span>
     </div>
     <div id="hourly-grid">
       <div class="msg" style="grid-column:1/-1;align-self:center">Loading…</div>
@@ -334,7 +317,7 @@ const WORKER_URL = 'https://door-display.schickja.workers.dev';
 
 const pad = n => String(n).padStart(2, '0');
 
-// ── Clock ─────────────────────────────────────────
+// Clock
 function tick() {
   const n = new Date();
   document.getElementById('clock').textContent =
@@ -344,7 +327,7 @@ function tick() {
 }
 setInterval(tick, 1000); tick();
 
-// ── Countdown ─────────────────────────────────────
+// Countdown
 let secs = 120;
 setInterval(() => {
   if (--secs <= 0) { location.reload(); return; }
@@ -352,7 +335,7 @@ setInterval(() => {
     `Refresh in ${Math.floor(secs/60)}:${pad(secs%60)}`;
 }, 1000);
 
-// ── Weather ───────────────────────────────────────
+// Weather
 const WMO = {
   0:['☀️','Clear'], 1:['🌤️','Mainly clear'], 2:['⛅','Partly cloudy'], 3:['☁️','Overcast'],
   45:['🌫️','Fog'], 48:['🌫️','Icy fog'],
@@ -399,51 +382,46 @@ async function loadWeather() {
     }
     grid.innerHTML = html || '<div class="msg" style="grid-column:1/-1">No data</div>';
 
-    // Tomorrow
     if (d.daily?.time?.length > 1) {
       const [ti, td] = wdesc(d.daily.weather_code[1]);
       document.getElementById('tmr-icon').textContent = ti;
       document.getElementById('tmr-desc').textContent = td;
       document.getElementById('tmr-range').textContent =
-        `${Math.round(d.daily.temperature_2m_min[1])}°–${Math.round(d.daily.temperature_2m_max[1])}°`;
+        `${Math.round(d.daily.temperature_2m_min[1])}° – ${Math.round(d.daily.temperature_2m_max[1])}°`;
       tmrBar.style.display = 'flex';
     }
-    document.getElementById('wx-updated').textContent =
-      now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {
     grid.innerHTML = `<div class="msg" style="grid-column:1/-1">Weather error: ${e.message}</div>`;
   }
 }
 
-// ── MVG Departures ────────────────────────────────
+// Departures
 async function loadDepartures() {
   const scroll = document.getElementById('bus-scroll');
   const sub    = document.getElementById('bus-sub');
   try {
     const r = await fetch(`${WORKER_URL}?limit=16&_=${Date.now()}`);
     const body = await r.text();
-    if (!r.ok) throw new Error(`Worker ${r.status}: ${body.slice(0,150)}`);
+    if (!r.ok) throw new Error(`Worker ${r.status}: ${body.slice(0,200)}`);
 
     let deps;
     try { deps = JSON.parse(body); }
-    catch { throw new Error(`Bad JSON: ${body.slice(0,150)}`); }
+    catch { throw new Error(`Bad JSON: ${body.slice(0,200)}`); }
 
-    if (deps && !Array.isArray(deps))
-      deps = deps.departures || deps.departureList || Object.values(deps)[0];
-
+    if (deps?.error) throw new Error(deps.error);
+    if (!Array.isArray(deps)) deps = deps.departures || deps.departureList || Object.values(deps)[0];
     if (!Array.isArray(deps) || deps.length === 0)
-      throw new Error(`Empty response: ${body.slice(0,150)}`);
+      throw new Error(`Empty: ${body.slice(0,200)}`);
 
-    const now = Date.now();
     sub.textContent = `Kiefernstraße · ${deps.length} deps`;
 
-    const tcls = t => ({'UBAHN':'t-ubahn','SBAHN':'t-sbahn','TRAM':'t-tram','BUS':'t-bus'}[t]||'');
+    const tcls = t => ({'UBAHN':'t-ubahn','SBAHN':'t-sbahn','TRAM':'t-tram','BUS':'t-bus','REGIONAL_BUS':'t-bus'}[t]||'');
     const mcls = m => m <= 0 ? 'now' : m > 15 ? 'late' : '';
     const mlbl = m => m <= 0 ? 'jetzt' : `${m}'`;
 
     scroll.innerHTML = deps.map(dep => {
       const depMs = dep.realtimeDepartureTime || dep.plannedDepartureTime || 0;
-      const mins  = Math.round((depMs - now) / 60000);
+      const mins  = Math.round((depMs - Date.now()) / 60000);
       const line  = dep.label || '?';
       const dest  = dep.destination || '?';
       const type  = (dep.transportType || 'BUS').toUpperCase();
